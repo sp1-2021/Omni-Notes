@@ -45,12 +45,16 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.Toolbar;
 import androidx.preference.EditTextPreference;
@@ -60,6 +64,13 @@ import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.SwitchPreference;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.afollestad.materialdialogs.folderselector.FolderChooserDialog;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import it.feio.android.analitica.AnalyticsHelper;
 import it.feio.android.omninotes.async.DataBackupIntentService;
@@ -88,11 +99,12 @@ import org.apache.commons.lang3.ArrayUtils;
 public class SettingsFragment extends PreferenceFragmentCompat {
 
   private SharedPreferences prefs;
-
   private static final int SPRINGPAD_IMPORT = 0;
   private static final int RINGTONE_REQUEST_CODE = 100;
+  private static final int SIGNIN_REQUEST_CODE = 101;
   public static final String XML_NAME = "xmlName";
-
+  private GoogleSignInAccount acc;
+  private GoogleSignInOptions gso;
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
@@ -104,6 +116,11 @@ public class SettingsFragment extends PreferenceFragmentCompat {
               .valueOf(getArguments().get(XML_NAME)));
     }
     addPreferencesFromResource(xmlId);
+
+    acc = GoogleSignIn.getLastSignedInAccount(getActivity());
+    gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestEmail()
+            .build();
   }
 
   @Override
@@ -568,6 +585,36 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         return false;
       });
     }
+
+    // Sync
+    SwitchPreference sync = findPreference("settings_sync_enable");
+
+    if (sync != null) {
+      if (sync.isChecked() && acc == null) {
+        sync.setChecked(false);
+      }
+
+      sync.setOnPreferenceChangeListener((pref, value) -> {
+        Boolean isDisabling = !((Boolean) value);
+        GoogleSignInClient client = GoogleSignIn.getClient(getActivity(), gso);
+        if (isDisabling) {
+          client.signOut().addOnCompleteListener(getActivity(), task -> {
+            try {
+              task.getResult();
+              Toast.makeText(getContext(), "Disabled sync and signed out from the account", Toast.LENGTH_LONG).show();
+            } catch (Exception e) {
+              Log.w("sign-out", "signOut:failed -" + e.toString());
+              sync.setChecked(true);
+            }
+          });
+          return true;
+        }
+
+        Intent signInIntent = client.getSignInIntent();
+        startActivityForResult(signInIntent, SIGNIN_REQUEST_CODE);
+        return true;
+      });
+    }
   }
 
 
@@ -716,6 +763,21 @@ public class SettingsFragment extends PreferenceFragmentCompat {
 
         default:
           LogDelegate.e("Wrong element choosen: " + requestCode);
+      }
+    }
+    if (requestCode == SIGNIN_REQUEST_CODE) {
+      Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(intent);
+      SwitchPreference pref = findPreference("settings_sync_enable");
+      try {
+        GoogleSignInAccount account = task.getResult(ApiException.class);
+        Log.d("sign-in", account.toString());
+        Toast.makeText(getContext(), "Sync enabled", Toast.LENGTH_LONG).show();
+        pref.setChecked(true);
+      } catch (ApiException e) {
+        // The ApiException status code indicates the detailed failure reason.
+        // Please refer to the GoogleSignInStatusCodes class reference for more information.
+        Log.w("sign-in", "signInResult:failed code=" + e.getStatusCode());
+        pref.setChecked(false);
       }
     }
   }

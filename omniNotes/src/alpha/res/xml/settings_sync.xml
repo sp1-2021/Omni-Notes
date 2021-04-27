@@ -14,22 +14,25 @@
   ~ You should have received a copy of the GNU General Public License
   ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   -->
-<set xmlns:android="http://schemas.android.com/apk/res/android">
 
-  <alpha
-    android:duration="@android:integer/config_mediumAnimTime"
-    android:fromAlpha="1.0"
-    android:interpolator="@android:anim/accelerate_interpolator"
-    android:toAlpha="0.0" />
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:app="http://schemas.android.com/apk/res-auto"
+  android:fitsSystemWindows="true">
 
-  <scale
-    android:duration="@android:integer/config_mediumAnimTime"
-    android:fromXScale="1"
-    android:fromYScale="1"
-    android:interpolator="@android:anim/accelerate_interpolator"
-    android:pivotX="50%"
-    android:pivotY="50%"
-    android:toXScale="2"
-    android:toYScale="2"></scale>
+  <SwitchPreference
+    android:defaultValue="false"
+    android:key="settings_sync_enable"
+    android:summaryOff="@string/settings_sync_summary_off"
 
-</set>
+    android:summaryOn="@string/settings_sync_enable_summary_on"
+
+    android:title="@string/settings_sync_enable"
+    app:iconSpaceReserved="false" />
+
+  <Preference
+      android:key="settings_password"
+      android:summary="@string/settings_sync_location_summary"
+      android:title="@string/settings_sync_location_title"
+      app:iconSpaceReserved="false" />
+
+</PreferenceScreen>

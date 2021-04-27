@@ -434,4 +434,12 @@
   <string name="channel_pinned_name">Pinned</string>
   <string name="channel_pinned_description">Notifications for pinned notes</string>
 
+  <!-- Sync -->
+  <string name="settings_sync">Sync</string>
+  <string name="settings_sync_summary">Enable notes cloud synchronisation</string>
+  <string name="settings_sync_location_title">Notes cloud location</string>
+  <string name="settings_sync_location_summary">Path where the notes are stored in the cloud</string>
+  <string name="settings_sync_enable">Enable notes cloud sync</string>
+  <string name="settings_sync_enable_summary_on">Disable synchronization, existing notes will not be deleted</string>
+  <string name="settings_sync_summary_off">Authentication with Google Drive is required to sync notes</string>
 </resources>

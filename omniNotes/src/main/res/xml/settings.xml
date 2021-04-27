@@ -74,6 +74,12 @@
         android:action="android.intent.action.VIEW"
         android:data="@string/beta_link" />
     </Preference>
+    <PreferenceScreen
+        android:key="settings_sync"
+        android:title="@string/settings_sync"
+        android:summary="@string/settings_sync_summary"
+        app:fragment="it.feio.android.omninotes.SettingsFragment"
+        app:iconSpaceReserved="false" />
   </PreferenceCategory>
 
 
