@@ -60,8 +60,15 @@ android {
     }
 
     packagingOptions {
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/LICENSE'
         exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/license.txt'
+        exclude 'META-INF/NOTICE'
         exclude 'META-INF/NOTICE.txt'
+        exclude 'META-INF/notice.txt'
+        exclude 'META-INF/ASL2.0'
+        exclude("META-INF/*.kotlin_module")
     }
 
     buildTypes {
@@ -115,6 +122,8 @@ android {
 }
 
 dependencies {
+    implementation 'androidx.appcompat:appcompat:1.2.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.powermock:powermock:1.6.5'
     testImplementation 'org.powermock:powermock-module-junit4:1.6.5'
@@ -223,6 +232,13 @@ dependencies {
 
     testImplementation 'junit:junit:4.12'
     implementation 'com.google.android.gms:play-services-auth:19.0.0'
+    implementation 'com.google.http-client:google-http-client-gson:1.26.0'
+    implementation('com.google.api-client:google-api-client-android:1.26.0') {
+        exclude group: 'org.apache.httpcomponents'
+    }
+    implementation('com.google.apis:google-api-services-drive:v3-rev136-1.25.0') {
+        exclude group: 'org.apache.httpcomponents'
+    }
 }
 
 configurations.all {
