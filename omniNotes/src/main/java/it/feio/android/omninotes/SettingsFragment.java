@@ -88,6 +88,7 @@ import it.feio.android.omninotes.utils.IntentChecker;
 import it.feio.android.omninotes.utils.PasswordHelper;
 import it.feio.android.omninotes.utils.ResourcesUtils;
 import it.feio.android.omninotes.utils.StorageHelper;
+import it.feio.android.omninotes.utils.SyncManager;
 import it.feio.android.omninotes.utils.SystemHelper;
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -101,10 +102,8 @@ public class SettingsFragment extends PreferenceFragmentCompat {
   private SharedPreferences prefs;
   private static final int SPRINGPAD_IMPORT = 0;
   private static final int RINGTONE_REQUEST_CODE = 100;
-  private static final int SIGNIN_REQUEST_CODE = 101;
   public static final String XML_NAME = "xmlName";
-  private GoogleSignInAccount acc;
-  private GoogleSignInOptions gso;
+  private SyncManager syncManager;
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
@@ -116,11 +115,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
               .valueOf(getArguments().get(XML_NAME)));
     }
     addPreferencesFromResource(xmlId);
-
-    acc = GoogleSignIn.getLastSignedInAccount(getActivity());
-    gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestEmail()
-            .build();
+    syncManager = new SyncManager(getActivity());
   }
 
   @Override
@@ -588,30 +583,29 @@ public class SettingsFragment extends PreferenceFragmentCompat {
 
     // Sync
     SwitchPreference sync = findPreference("settings_sync_enable");
-
     if (sync != null) {
-      if (sync.isChecked() && acc == null) {
+      if (sync.isChecked() && !syncManager.isAccountConnected()) {
         sync.setChecked(false);
       }
 
       sync.setOnPreferenceChangeListener((pref, value) -> {
         Boolean isDisabling = !((Boolean) value);
-        GoogleSignInClient client = GoogleSignIn.getClient(getActivity(), gso);
         if (isDisabling) {
-          client.signOut().addOnCompleteListener(getActivity(), task -> {
-            try {
-              task.getResult();
+          syncManager.disconnectAccount(new SyncManager.AccountDisconnectionResultHandler() {
+            @Override
+            public void onSuccess() {
               Toast.makeText(getContext(), "Disabled sync and signed out from the account", Toast.LENGTH_LONG).show();
-            } catch (Exception e) {
-              Log.w("sign-out", "signOut:failed -" + e.toString());
+            }
+
+            @Override
+            public void onFailure(Exception e) {
               sync.setChecked(true);
             }
           });
           return true;
         }
 
-        Intent signInIntent = client.getSignInIntent();
-        startActivityForResult(signInIntent, SIGNIN_REQUEST_CODE);
+        syncManager.initAccountConnection();
         return true;
       });
     }
@@ -765,20 +759,21 @@ public class SettingsFragment extends PreferenceFragmentCompat {
           LogDelegate.e("Wrong element choosen: " + requestCode);
       }
     }
-    if (requestCode == SIGNIN_REQUEST_CODE) {
-      Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(intent);
-      SwitchPreference pref = findPreference("settings_sync_enable");
-      try {
-        GoogleSignInAccount account = task.getResult(ApiException.class);
-        Log.d("sign-in", account.toString());
-        Toast.makeText(getContext(), "Sync enabled", Toast.LENGTH_LONG).show();
-        pref.setChecked(true);
-      } catch (ApiException e) {
-        // The ApiException status code indicates the detailed failure reason.
-        // Please refer to the GoogleSignInStatusCodes class reference for more information.
-        Log.w("sign-in", "signInResult:failed code=" + e.getStatusCode());
-        pref.setChecked(false);
-      }
+    SwitchPreference pref = findPreference("settings_sync_enable");
+    if (requestCode == SyncManager.SIGNIN_REQUEST_CODE) {
+      syncManager.onAccountConnectionResult(intent, new SyncManager.AccountConnectionResultHandler() {
+        @Override
+        public void onSuccess(GoogleSignInAccount account) {
+          Toast.makeText(getContext(), "Sync enabled", Toast.LENGTH_LONG).show();
+          pref.setChecked(true);
+        }
+
+        @Override
+        public void onFailure(ApiException e) {
+          Log.w("sign-in", "signInResult:failed code=" + e.getStatusCode());
+          pref.setChecked(false);
+        }
+      });
     }
   }
 }
