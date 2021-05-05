@@ -115,7 +115,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
               .valueOf(getArguments().get(XML_NAME)));
     }
     addPreferencesFromResource(xmlId);
-    syncManager = new SyncManager(getActivity());
+    syncManager = new SyncManager();
   }
 
   @Override
@@ -591,7 +591,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
       sync.setOnPreferenceChangeListener((pref, value) -> {
         Boolean isDisabling = !((Boolean) value);
         if (isDisabling) {
-          syncManager.disconnectAccount(new SyncManager.AccountDisconnectionResultHandler() {
+          syncManager.disconnectAccount(getActivity(), new SyncManager.AccountDisconnectionResultHandler() {
             @Override
             public void onSuccess() {
               Toast.makeText(getContext(), "Disabled sync and signed out from the account", Toast.LENGTH_LONG).show();
@@ -605,7 +605,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
           return true;
         }
 
-        syncManager.initAccountConnection();
+        syncManager.initAccountConnection(getActivity());
         return true;
       });
     }
