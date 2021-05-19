@@ -52,6 +52,16 @@ public class DriveFileHolder {
         this.modifiedTime = modifiedTime;
     }
 
+    public Long getNoteModifiedTime() {
+        String[] parts = this.getName().split("_");
+        return  parts.length > 1 ? Long.parseLong(parts[2]) : Long.MAX_VALUE;
+    };
+
+    public Long getNoteId() {
+        String[] parts = this.getName().split("_");
+        return  parts.length > 0 ? Long.parseLong(parts[1]) : Long.MAX_VALUE;
+    };
+
     public long getSize() {
         return size;
     }

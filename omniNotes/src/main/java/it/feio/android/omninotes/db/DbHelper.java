@@ -51,6 +51,7 @@ import it.feio.android.omninotes.models.Tag;
 import it.feio.android.omninotes.utils.AssetUtils;
 import it.feio.android.omninotes.utils.Navigation;
 import it.feio.android.omninotes.utils.Security;
+import it.feio.android.omninotes.utils.SyncManager;
 import it.feio.android.omninotes.utils.TagsHelper;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -122,6 +123,7 @@ public class DbHelper extends SQLiteOpenHelper {
   private final SharedPreferences prefs;
 
   private static DbHelper instance = null;
+  private static SyncManager mSyncManager = null;
   private SQLiteDatabase db;
 
 
@@ -133,6 +135,7 @@ public class DbHelper extends SQLiteOpenHelper {
   public static synchronized DbHelper getInstance(Context context) {
     if (instance == null) {
       instance = new DbHelper(context);
+      instance.mSyncManager = new SyncManager();
     }
     return instance;
   }
@@ -268,6 +271,8 @@ public class DbHelper extends SQLiteOpenHelper {
     note.setCreation(
         note.getCreation() != null ? note.getCreation() : values.getAsLong(KEY_CREATION));
     note.setLastModification(values.getAsLong(KEY_LAST_MODIFICATION));
+
+    mSyncManager.syncNote(note);
 
     return note;
   }
@@ -512,6 +517,7 @@ public class DbHelper extends SQLiteOpenHelper {
   public void trashNote(Note note, boolean trash) {
     note.setTrashed(trash);
     updateNote(note, false);
+    mSyncManager.syncNote(note);
   }
 
 
@@ -527,6 +533,7 @@ public class DbHelper extends SQLiteOpenHelper {
    * Deleting single note, eventually keeping attachments
    */
   public boolean deleteNote(Note note, boolean keepAttachments) {
+    mSyncManager.deleteNote(note);
     return deleteNote(note.get_id(), keepAttachments);
   }
 

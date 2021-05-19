@@ -25,7 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public class Note extends BaseNote implements Parcelable {
+public class Note extends BaseNote implements Parcelable, Cloneable {
 
   /*
    * Parcelable interface must also have a static field called CREATOR, which is an object implementing the
@@ -185,4 +185,7 @@ public class Note extends BaseNote implements Parcelable {
     parcel.writeList(getAttachmentsList());
   }
 
+  public Note clone() {
+    return new Note(this);
+  }
 }

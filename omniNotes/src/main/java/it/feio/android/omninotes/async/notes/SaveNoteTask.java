@@ -37,7 +37,6 @@ public class SaveNoteTask extends AsyncTask<Note, Void, Note> {
   private Context context;
   private boolean updateLastModification = true;
   private OnNoteSaved mOnNoteSaved;
-  private SyncManager mSyncManager;
 
   public SaveNoteTask(boolean updateLastModification) {
     this(null, updateLastModification);
@@ -49,7 +48,6 @@ public class SaveNoteTask extends AsyncTask<Note, Void, Note> {
     this.context = OmniNotes.getAppContext();
     this.mOnNoteSaved = mOnNoteSaved;
     this.updateLastModification = updateLastModification;
-    mSyncManager = new SyncManager();
   }
 
 
@@ -62,7 +60,6 @@ public class SaveNoteTask extends AsyncTask<Note, Void, Note> {
       note.setReminderFired(false);
     }
     note = DbHelper.getInstance().updateNote(note, updateLastModification);
-    mSyncManager.syncNote(note);
     if (reminderMustBeSet) {
       ReminderHelper.addReminder(context, note);
     }

@@ -37,6 +37,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
@@ -65,6 +66,7 @@ import it.feio.android.omninotes.models.Note;
 import it.feio.android.omninotes.models.ONStyle;
 import it.feio.android.omninotes.utils.FileProviderHelper;
 import it.feio.android.omninotes.utils.PasswordHelper;
+import it.feio.android.omninotes.utils.SyncManager;
 import it.feio.android.omninotes.utils.SystemHelper;
 import it.feio.android.pixlui.links.UrlCompleter;
 import java.util.ArrayList;
@@ -86,7 +88,7 @@ public class MainActivity extends BaseActivity implements
   private Uri sketchUri;
   boolean prefsChanged = false;
   private FragmentManager mFragmentManager;
-
+  private SyncManager mSyncManager;
   ActivityMainBinding binding;
 
   @Override
@@ -107,6 +109,7 @@ public class MainActivity extends BaseActivity implements
       startActivity(new Intent(getApplicationContext(), IntroActivity.class));
     }
 
+//    mSyncManager = new SyncManager();
   }
 
   @Override
@@ -117,6 +120,7 @@ public class MainActivity extends BaseActivity implements
     } else {
       checkPassword();
     }
+//    mSyncManager.fullSync();
   }
 
 
