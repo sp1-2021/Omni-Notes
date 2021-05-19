@@ -55,6 +55,7 @@ import android.os.Looper;
 import android.os.Parcelable;
 import android.text.Html;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -86,6 +87,7 @@ import it.feio.android.omninotes.async.bus.CategoriesUpdatedEvent;
 import it.feio.android.omninotes.async.bus.NavigationUpdatedNavDrawerClosedEvent;
 import it.feio.android.omninotes.async.bus.NotesLoadedEvent;
 import it.feio.android.omninotes.async.bus.NotesMergeEvent;
+import it.feio.android.omninotes.async.bus.NotesSyncedEvent;
 import it.feio.android.omninotes.async.bus.PasswordRemovedEvent;
 import it.feio.android.omninotes.async.notes.NoteLoaderTask;
 import it.feio.android.omninotes.async.notes.NoteProcessorArchive;
@@ -124,6 +126,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
+
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 
@@ -1202,6 +1206,21 @@ public class ListFragment extends BaseFragment implements OnViewTouchedListener,
     animateListView();
 
     closeFab();
+  }
+
+  public void onEvent(NotesSyncedEvent notesSyncedEvent) {
+    if (notesSyncedEvent.getNotes().size() == 0) {
+      listAdapter.notifyDataSetChanged();
+      return;
+    }
+
+    Map<Long, Note> noteMap = new HashMap<>();
+    listAdapter.getNotes().forEach(note -> noteMap.put(note.get_id(), note));
+    notesSyncedEvent.getNotes().forEach(note -> noteMap.put(note.get_id(), note));
+
+    listAdapter.remove(listAdapter.getNotes());
+    noteMap.keySet().forEach(key -> listAdapter.add(noteMap.get(key)));
+    listAdapter.notifyDataSetChanged();
   }
 
   private void initSwipeGesture() {

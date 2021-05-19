@@ -269,6 +269,10 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteViewHolder> {
     add(index, note);
   }
 
+  public void add( @NonNull Object o) {
+    notes.add((Note) o);
+  }
+
   public void add(int index, @NonNull Object o) {
     notes.add(index, (Note) o);
     notifyItemInserted(index);

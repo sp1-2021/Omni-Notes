@@ -52,6 +52,7 @@ import de.greenrobot.event.EventBus;
 import de.keyboardsurfer.android.widget.crouton.Crouton;
 import de.keyboardsurfer.android.widget.crouton.Style;
 import it.feio.android.omninotes.async.UpdateWidgetsTask;
+import it.feio.android.omninotes.async.bus.NotesSyncedEvent;
 import it.feio.android.omninotes.async.bus.PasswordRemovedEvent;
 import it.feio.android.omninotes.async.bus.SwitchFragmentEvent;
 import it.feio.android.omninotes.async.notes.NoteProcessorDelete;
@@ -72,6 +73,9 @@ import it.feio.android.pixlui.links.UrlCompleter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Timer;
+import java.util.TimerTask;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -109,7 +113,14 @@ public class MainActivity extends BaseActivity implements
       startActivity(new Intent(getApplicationContext(), IntroActivity.class));
     }
 
-//    mSyncManager = new SyncManager();
+    mSyncManager = new SyncManager();
+    Timer timer = new Timer();
+    timer.scheduleAtFixedRate(new TimerTask() {
+      @Override
+      public void run() {
+        mSyncManager.fullSync();
+      }
+    }, 0, 10 * 1000);
   }
 
   @Override
@@ -120,7 +131,6 @@ public class MainActivity extends BaseActivity implements
     } else {
       checkPassword();
     }
-//    mSyncManager.fullSync();
   }
 
 
@@ -165,6 +175,9 @@ public class MainActivity extends BaseActivity implements
   public void onEvent(PasswordRemovedEvent passwordRemovedEvent) {
     showMessage(R.string.password_successfully_removed, ONStyle.ALERT);
     init();
+  }
+
+  public void onEvent(NotesSyncedEvent passwordRemovedEvent) {
   }
 
 

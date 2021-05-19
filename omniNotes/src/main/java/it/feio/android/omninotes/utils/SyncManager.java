@@ -21,13 +21,17 @@ import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 
 import java.io.File;
+import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import de.greenrobot.event.EventBus;
 import it.feio.android.omninotes.OmniNotes;
+import it.feio.android.omninotes.async.bus.NotesSyncedEvent;
 import it.feio.android.omninotes.async.notes.SaveNoteTask;
 import it.feio.android.omninotes.db.DbHelper;
 import it.feio.android.omninotes.models.Attachment;
@@ -279,11 +283,11 @@ public class SyncManager {
     }
 
     protected void saveNote(Note note) {
-        new SaveNoteTask(new OnNoteSaved() {
-            @Override
-            public void onNoteSaved(Note noteSaved) {
-                Log.d("omni:note_saved", noteSaved.toString());
-            }
+        new SaveNoteTask(noteSaved -> {
+            Log.d("omni:note_saved", noteSaved.toString());
+            List<Note> newNotes = new ArrayList<>();
+            newNotes.add(noteSaved);
+            EventBus.getDefault().post(new NotesSyncedEvent(newNotes));
         }, false)
             .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, note);
     }
@@ -332,6 +336,7 @@ public class SyncManager {
                                     .addOnCompleteListener(uploadTask -> {
                                         if (uploadTask.isSuccessful()) {
                                             Log.d("omni_download", "Downloaded attachment" + result.getName());
+                                            EventBus.getDefault().post(new NotesSyncedEvent(new ArrayList<>()));
                                         } else {
                                             uploadTask.getException().printStackTrace();
                                         }
