@@ -135,7 +135,7 @@ public class DbHelper extends SQLiteOpenHelper {
   public static synchronized DbHelper getInstance(Context context) {
     if (instance == null) {
       instance = new DbHelper(context);
-      instance.mSyncManager = new SyncManager();
+      instance.mSyncManager = SyncManager.getInstance();
     }
     return instance;
   }

@@ -115,7 +115,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
               .valueOf(getArguments().get(XML_NAME)));
     }
     addPreferencesFromResource(xmlId);
-    syncManager = new SyncManager();
+    syncManager = SyncManager.getInstance();
   }
 
   @Override

@@ -40,7 +40,7 @@ public class DriveActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_drive);
 
-        sync = new SyncManager();
+        sync = SyncManager.getInstance();
         DriveActivity s = this;
         sync.disconnectAccount(s, new SyncManager.AccountDisconnectionResultHandler() {
             @Override

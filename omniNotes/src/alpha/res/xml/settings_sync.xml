@@ -29,10 +29,4 @@
     android:title="@string/settings_sync_enable"
     app:iconSpaceReserved="false" />
 
-  <Preference
-      android:key="settings_password"
-      android:summary="@string/settings_sync_location_summary"
-      android:title="@string/settings_sync_location_title"
-      app:iconSpaceReserved="false" />
-
 </PreferenceScreen>

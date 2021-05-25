@@ -113,14 +113,8 @@ public class MainActivity extends BaseActivity implements
       startActivity(new Intent(getApplicationContext(), IntroActivity.class));
     }
 
-    mSyncManager = new SyncManager();
-    Timer timer = new Timer();
-    timer.scheduleAtFixedRate(new TimerTask() {
-      @Override
-      public void run() {
-        mSyncManager.fullSync();
-      }
-    }, 0, 10 * 1000);
+    mSyncManager = SyncManager.getInstance();
+    mSyncManager.watch();
   }
 
   @Override

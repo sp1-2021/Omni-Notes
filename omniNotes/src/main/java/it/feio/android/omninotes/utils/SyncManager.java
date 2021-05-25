@@ -21,12 +21,13 @@ import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 
 import java.io.File;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.stream.Collectors;
 
 import de.greenrobot.event.EventBus;
@@ -39,6 +40,7 @@ import it.feio.android.omninotes.models.Note;
 import it.feio.android.omninotes.models.listeners.OnNoteSaved;
 
 public class SyncManager {
+    private static SyncManager instance;
     public static final int SIGNIN_REQUEST_CODE = 101;
     private GoogleSignInAccount acc;
     private GoogleSignInOptions gso;
@@ -64,6 +66,23 @@ public class SyncManager {
         if (acc != null) {
             prepareDriveService();
         }
+    }
+
+    public static SyncManager getInstance() {
+        if (instance == null) {
+            instance = new SyncManager();
+        }
+        return instance;
+    }
+
+    public void watch() {
+        Timer timer = new Timer();
+        timer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                getInstance().fullSync();
+            }
+        }, 0, 10 * 1000);
     }
 
     public boolean isAccountConnected() {
@@ -192,6 +211,27 @@ public class SyncManager {
             });
     }
 
+    protected void saveDownloadedNote(Note note) {
+        syncAttachmentsToLocal(note);
+        saveNote(note);
+    }
+
+    protected void syncAttachmentsToLocal(Note note) {
+        List<Attachment> attachments = note.getAttachmentsList()
+                .stream()
+                .map(attachment -> {
+                    File f = new File(getStoragePath(attachment.getUri().toString()));
+                    if (!f.exists()) {
+                        f.getParentFile().mkdirs();
+                        downloadAttachment(attachment.getUri().toString());
+                    }
+                    attachment.setUri(getStorageUriFromRemoteAttachment(attachment));
+                    return attachment;
+                })
+                .collect(Collectors.toList());
+        note.setAttachmentsList(attachments);
+    }
+
     public void syncNote(Note note) {
         String notePrefix = "omni_" + note.get_id().toString();
         if (isDriveReady()) {
@@ -277,11 +317,6 @@ public class SyncManager {
         return filename;
     }
 
-    protected void saveDownloadedNote(Note note) {
-        syncAttachmentsToLocal(note);
-        saveNote(note);
-    }
-
     protected void saveNote(Note note) {
         new SaveNoteTask(noteSaved -> {
             Log.d("omni:note_saved", noteSaved.toString());
@@ -309,21 +344,7 @@ public class SyncManager {
         }
     }
 
-    protected void syncAttachmentsToLocal(Note note) {
-        List<Attachment> attachments = note.getAttachmentsList()
-                .stream()
-                .map(attachment -> {
-                    File f = new File(getStoragePath(attachment.getUri().toString()));
-                    if (!f.exists()) {
-                        f.getParentFile().mkdirs();
-                        downloadAttachment(attachment.getUri().toString());
-                    }
-                    attachment.setUri(getStorageUriFromRemoteAttachment(attachment));
-                    return attachment;
-                })
-                .collect(Collectors.toList());
-        note.setAttachmentsList(attachments);
-    }
+
 
     protected void downloadAttachment(String name) {
         mDriveHelper
@@ -336,7 +357,6 @@ public class SyncManager {
                                     .addOnCompleteListener(uploadTask -> {
                                         if (uploadTask.isSuccessful()) {
                                             Log.d("omni_download", "Downloaded attachment" + result.getName());
-                                            EventBus.getDefault().post(new NotesSyncedEvent(new ArrayList<>()));
                                         } else {
                                             uploadTask.getException().printStackTrace();
                                         }
