@@ -217,12 +217,12 @@ public class DbHelper extends SQLiteOpenHelper {
   }
 
 
-  public Note updateNote(Note note, boolean updateLastModification) {
+  protected Note updateNoteLocally(Note note, boolean updateLastModification) {
     db = getDatabase(true);
 
     String content = Boolean.TRUE.equals(note.isLocked())
-        ? Security.encrypt(note.getContent(), prefs.getString(PREF_PASSWORD, ""))
-        : note.getContent();
+            ? Security.encrypt(note.getContent(), prefs.getString(PREF_PASSWORD, ""))
+            : note.getContent();
 
     // To ensure note and attachments insertions are atomic and boost performances transaction are used
     db.beginTransaction();
@@ -231,10 +231,10 @@ public class DbHelper extends SQLiteOpenHelper {
     values.put(KEY_TITLE, note.getTitle());
     values.put(KEY_CONTENT, content);
     values.put(KEY_CREATION,
-        note.getCreation() != null ? note.getCreation() : Calendar.getInstance().getTimeInMillis());
+            note.getCreation() != null ? note.getCreation() : Calendar.getInstance().getTimeInMillis());
     long lastModification = note.getLastModification() != null && !updateLastModification
-        ? note.getLastModification()
-        : Calendar.getInstance().getTimeInMillis();
+            ? note.getLastModification()
+            : Calendar.getInstance().getTimeInMillis();
     values.put(KEY_LAST_MODIFICATION, lastModification);
     values.put(KEY_ARCHIVED, note.isArchived());
     values.put(KEY_TRASHED, note.isTrashed());
@@ -255,13 +255,13 @@ public class DbHelper extends SQLiteOpenHelper {
     List<Attachment> deletedAttachments = note.getAttachmentsListOld();
     for (Attachment attachment : note.getAttachmentsList()) {
       updateAttachment(note.get_id() != null ? note.get_id() : values.getAsLong(KEY_CREATION),
-          attachment, db);
+              attachment, db);
       deletedAttachments.remove(attachment);
     }
     // Remove from database deleted attachments
     for (Attachment attachmentDeleted : deletedAttachments) {
       db.delete(TABLE_ATTACHMENTS, KEY_ATTACHMENT_ID + " = ?",
-          new String[]{String.valueOf(attachmentDeleted.getId())});
+              new String[]{String.valueOf(attachmentDeleted.getId())});
     }
 
     db.setTransactionSuccessful();
@@ -269,13 +269,23 @@ public class DbHelper extends SQLiteOpenHelper {
 
     // Fill the note with correct data before returning it
     note.setCreation(
-        note.getCreation() != null ? note.getCreation() : values.getAsLong(KEY_CREATION));
+            note.getCreation() != null ? note.getCreation() : values.getAsLong(KEY_CREATION));
     note.setLastModification(values.getAsLong(KEY_LAST_MODIFICATION));
-
-    mSyncManager.syncNote(note);
 
     return note;
   }
+
+  public Note updateNote(Note note, boolean updateLastModification) {
+    Note savedNote = updateNoteLocally(note, updateLastModification);
+    mSyncManager.syncNoteToRemote(savedNote);
+    return savedNote;
+  }
+
+  public Note updateNoteWithoutSync(Note note, boolean updateLastModification) {
+    return updateNoteLocally(note, updateLastModification);
+  }
+
+
 
 
   private void execSqlFile(String sqlFile, SQLiteDatabase db) throws SQLException, IOException {
@@ -517,7 +527,7 @@ public class DbHelper extends SQLiteOpenHelper {
   public void trashNote(Note note, boolean trash) {
     note.setTrashed(trash);
     updateNote(note, false);
-    mSyncManager.syncNote(note);
+    mSyncManager.syncNoteToRemote(note);
   }
 
 
@@ -533,10 +543,22 @@ public class DbHelper extends SQLiteOpenHelper {
    * Deleting single note, eventually keeping attachments
    */
   public boolean deleteNote(Note note, boolean keepAttachments) {
-    mSyncManager.deleteNote(note);
+    mSyncManager.deleteRemoteNote(note);
     return deleteNote(note.get_id(), keepAttachments);
   }
 
+  /**
+   * Deleting single note, eventually keeping attachments
+   */
+  public boolean deleteNoteWithoutSync(Note note, boolean keepAttachments) {
+    SQLiteDatabase db = getDatabase(true);
+    db.delete(TABLE_NOTES, KEY_ID + " = ?", new String[]{String.valueOf(note.get_id())});
+    if (!keepAttachments) {
+      db.delete(TABLE_ATTACHMENTS, KEY_ATTACHMENT_NOTE_ID + " = ?",
+              new String[]{String.valueOf(note.get_id())});
+    }
+    return true;
+  }
 
   /**
    * Deleting single note by its ID

@@ -45,7 +45,6 @@ public class DriveActivity extends AppCompatActivity {
         sync.disconnectAccount(s, new SyncManager.AccountDisconnectionResultHandler() {
             @Override
             public void onSuccess() {
-                sync.initAccountConnection(s);
             }
 
             @Override

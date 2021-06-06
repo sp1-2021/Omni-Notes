@@ -22,6 +22,7 @@ import com.google.api.services.drive.DriveScopes;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -32,12 +33,12 @@ import java.util.stream.Collectors;
 
 import de.greenrobot.event.EventBus;
 import it.feio.android.omninotes.OmniNotes;
+import it.feio.android.omninotes.SettingsFragment;
 import it.feio.android.omninotes.async.bus.NotesSyncedEvent;
 import it.feio.android.omninotes.async.notes.SaveNoteTask;
 import it.feio.android.omninotes.db.DbHelper;
 import it.feio.android.omninotes.models.Attachment;
 import it.feio.android.omninotes.models.Note;
-import it.feio.android.omninotes.models.listeners.OnNoteSaved;
 
 public class SyncManager {
     private static SyncManager instance;
@@ -94,10 +95,10 @@ public class SyncManager {
         return acc;
     }
 
-    public void initAccountConnection(Activity activity) {
+    public void initAccountConnection(SettingsFragment fragment) {
         GoogleSignInClient client = GoogleSignIn.getClient(OmniNotes.getAppContext(), gso);
         Intent signInIntent = client.getSignInIntent();
-        activity.startActivityForResult(signInIntent, SIGNIN_REQUEST_CODE);
+        fragment.startActivityForResult(signInIntent, SIGNIN_REQUEST_CODE);
     }
 
     public void disconnectAccount(Activity activity, AccountDisconnectionResultHandler handler) {
@@ -105,6 +106,7 @@ public class SyncManager {
         client.signOut().addOnCompleteListener(activity, task -> {
             try {
                 task.getResult();
+                acc = null;
                 handler.onSuccess();
             } catch (Exception e) {
                 Log.w("sign-out", "signOut:failed -" + e.toString());
@@ -155,11 +157,15 @@ public class SyncManager {
                        // All local notes that are not present on drive,
                        // Don't check for potential updates as those are
                        // made when the note is saved locally.
-                       List<Note> notesToUpdate = pickNotesToUpdate(remoteNotes, localNotes);
+                       List<Note> notesToDelete = pickNotesToDelete(remoteNotes, localNotes);
 
                        notesToDownload.forEach(file -> updateLocalNote(file));
                        notesToFetch.forEach(file -> updateLocalNote(file));
-                       notesToUpdate.forEach(note -> uploadNote(note));
+                       notesToDelete.forEach(note -> DbHelper.getInstance().deleteNoteWithoutSync(note, false));
+
+                       if (notesToDelete.size() > 0) {
+                           EventBus.getDefault().post(new NotesSyncedEvent(notesToDelete, true));
+                       }
                    } else {
                        task.getException().printStackTrace();
                    }
@@ -189,12 +195,9 @@ public class SyncManager {
                 .collect(Collectors.toList());
     }
 
-    List<Note> pickNotesToUpdate(List<DriveFileHolder> remoteNotes, List<Note> localNotes) {
+    List<Note> pickNotesToDelete(List<DriveFileHolder> remoteNotes, List<Note> localNotes) {
         return localNotes.stream()
-                .filter(ln -> remoteNotes.stream()
-                        .filter(rn -> rn.getNoteId().equals(ln.get_id()))
-                        .collect(Collectors.toList())
-                        .size() == 0)
+                .filter(ln -> !remoteNotes.stream().anyMatch(rn -> ln.get_id().equals(rn.getNoteId())))
                 .collect(Collectors.toList());
     }
 
@@ -213,7 +216,17 @@ public class SyncManager {
 
     protected void saveDownloadedNote(Note note) {
         syncAttachmentsToLocal(note);
-        saveNote(note);
+        updateLocalNote(note);
+    }
+
+    protected void updateLocalNote(Note note) {
+        new SaveNoteTask(noteSaved -> {
+            Log.d("omni:note_saved", noteSaved.toString());
+            List<Note> newNotes = new ArrayList<>();
+            newNotes.add(noteSaved);
+            EventBus.getDefault().post(new NotesSyncedEvent(newNotes));
+        }, false, false)
+                .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, note);
     }
 
     protected void syncAttachmentsToLocal(Note note) {
@@ -232,7 +245,7 @@ public class SyncManager {
         note.setAttachmentsList(attachments);
     }
 
-    public void syncNote(Note note) {
+    public void syncNoteToRemote(Note note) {
         String notePrefix = "omni_" + note.get_id().toString();
         if (isDriveReady()) {
             mDriveHelper
@@ -241,7 +254,7 @@ public class SyncManager {
                         if (task.isSuccessful()) {
                             DriveFileHolder result = task.getResult();
                             if (result.exists()) {
-                                updateNote(result.getId(), note);
+                                updateRemoteNote(result.getId(), note);
                             } else {
                                 uploadNote(note);
                             }
@@ -251,7 +264,7 @@ public class SyncManager {
         }
     }
 
-    protected void updateNote(String fileId, Note original) {
+    protected void updateRemoteNote(String fileId, Note original) {
         Note note = original.clone();
         String notePrefix = "omni_" + note.get_id().toString();
         String noteFile = notePrefix + "_" + note.getLastModification();
@@ -317,17 +330,7 @@ public class SyncManager {
         return filename;
     }
 
-    protected void saveNote(Note note) {
-        new SaveNoteTask(noteSaved -> {
-            Log.d("omni:note_saved", noteSaved.toString());
-            List<Note> newNotes = new ArrayList<>();
-            newNotes.add(noteSaved);
-            EventBus.getDefault().post(new NotesSyncedEvent(newNotes));
-        }, false)
-            .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, note);
-    }
-
-    public void deleteNote(Note note) {
+    public void deleteRemoteNote(Note note) {
         String noteFile = "omni_" + note.get_id().toString();
 
         if (isDriveReady()) {
@@ -399,13 +402,20 @@ public class SyncManager {
         Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(intent);
         try {
             acc = task.getResult(ApiException.class);
+            gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                    .requestScopes(new Scope(DriveScopes.DRIVE_FILE))
+                    .requestEmail()
+                    .build();
+            if (acc != null) {
+                prepareDriveService();
+            }
             Log.d("sync-sign-in", acc.toString());
             handler.onSuccess(acc);
-        } catch (ApiException e) {
+        } catch (Exception e) {
             // The ApiException status code indicates the detailed failure reason.
             // Please refer to the GoogleSignInStatusCodes class reference for more information.
-            Log.w("sync-sign-in", "signInResult:failed code=" + e.getStatusCode());
-            handler.onFailure(e);
+            e.printStackTrace();
+            handler.onFailure((ApiException) e);
         }
     }
 

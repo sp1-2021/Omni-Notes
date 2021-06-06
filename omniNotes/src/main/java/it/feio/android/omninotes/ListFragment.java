@@ -126,6 +126,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
@@ -142,6 +145,7 @@ public class ListFragment extends BaseFragment implements OnViewTouchedListener,
   public static final String LIST_VIEW_POSITION_OFFSET = "listViewPositionOffset";
 
   private FragmentListBinding binding;
+  private Lock syncLock = new ReentrantLock();
 
   private List<Note> selectedNotes = new ArrayList<>();
   private SearchView searchView;
@@ -1209,18 +1213,40 @@ public class ListFragment extends BaseFragment implements OnViewTouchedListener,
   }
 
   public void onEvent(NotesSyncedEvent notesSyncedEvent) {
-    if (notesSyncedEvent.getNotes().size() == 0) {
+    if (syncLock.tryLock())  {
+      syncLock.lock();
+
+
+      if (notesSyncedEvent.getNotes().size() == 0) {
+        listAdapter.notifyDataSetChanged();
+        return;
+      }
+
+
+      Map<Long, Note> noteMap = new HashMap<>();
+      listAdapter.getNotes().forEach(note -> noteMap.put(note.get_id(), note));
+
+      if (notesSyncedEvent.isDeleteSync()) {
+        notesSyncedEvent.getNotes().forEach(note -> noteMap.remove(note.get_id()));
+      } else {
+        notesSyncedEvent.getNotes().forEach(note -> noteMap.put(note.get_id(), note));
+      }
+
+      String title = mainActivity.getSupportActionBar().getTitle().toString();
+      boolean isHome = mainActivity.getSupportActionBar().getTitle().toString().equals("Notes");
+      boolean isTrash = mainActivity.getSupportActionBar().getTitle().toString().equals("Trash");
+      boolean isArchive = mainActivity.getSupportActionBar().getTitle().toString().equals("Archive");
+      listAdapter.clear();
+      noteMap.keySet().forEach(key -> {
+        Note note = noteMap.get(key);
+        boolean shouldAddNote = (isTrash && note.isTrashed()) || (isHome && !note.isTrashed() && !note.isArchived()) || (isArchive && note.isArchived());
+        if (shouldAddNote) {
+          listAdapter.add(note);
+        }
+      });
       listAdapter.notifyDataSetChanged();
-      return;
+      syncLock.unlock();
     }
-
-    Map<Long, Note> noteMap = new HashMap<>();
-    listAdapter.getNotes().forEach(note -> noteMap.put(note.get_id(), note));
-    notesSyncedEvent.getNotes().forEach(note -> noteMap.put(note.get_id(), note));
-
-    listAdapter.remove(listAdapter.getNotes());
-    noteMap.keySet().forEach(key -> listAdapter.add(noteMap.get(key)));
-    listAdapter.notifyDataSetChanged();
   }
 
   private void initSwipeGesture() {

@@ -100,6 +100,7 @@ import org.apache.commons.lang3.ArrayUtils;
 public class SettingsFragment extends PreferenceFragmentCompat {
 
   private SharedPreferences prefs;
+  private Boolean prefLock = false;
   private static final int SPRINGPAD_IMPORT = 0;
   private static final int RINGTONE_REQUEST_CODE = 100;
   public static final String XML_NAME = "xmlName";
@@ -584,11 +585,10 @@ public class SettingsFragment extends PreferenceFragmentCompat {
     // Sync
     SwitchPreference sync = findPreference("settings_sync_enable");
     if (sync != null) {
-      if (sync.isChecked() && !syncManager.isAccountConnected()) {
-        sync.setChecked(false);
-      }
-
       sync.setOnPreferenceChangeListener((pref, value) -> {
+        if (prefLock) {
+          return true;
+        }
         Boolean isDisabling = !((Boolean) value);
         if (isDisabling) {
           syncManager.disconnectAccount(getActivity(), new SyncManager.AccountDisconnectionResultHandler() {
@@ -604,8 +604,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
           });
           return true;
         }
-
-        syncManager.initAccountConnection(getActivity());
+        syncManager.initAccountConnection(this);
         return true;
       });
     }
@@ -765,13 +764,17 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         @Override
         public void onSuccess(GoogleSignInAccount account) {
           Toast.makeText(getContext(), "Sync enabled", Toast.LENGTH_LONG).show();
+          prefLock = true;
           pref.setChecked(true);
+          prefLock = false;
         }
 
         @Override
         public void onFailure(ApiException e) {
           Log.w("sign-in", "signInResult:failed code=" + e.getStatusCode());
+          prefLock = true;
           pref.setChecked(false);
+          prefLock = false;
         }
       });
     }

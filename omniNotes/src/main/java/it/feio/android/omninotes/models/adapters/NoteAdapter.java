@@ -284,6 +284,10 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteViewHolder> {
     }
   }
 
+  public void clear() {
+    notes.clear();
+  }
+
   public void remove(@NonNull Note note) {
     int pos = getPosition(note);
     if (pos >= 0) {

@@ -36,6 +36,7 @@ public class SaveNoteTask extends AsyncTask<Note, Void, Note> {
 
   private Context context;
   private boolean updateLastModification = true;
+  private boolean shouldSync = true;
   private OnNoteSaved mOnNoteSaved;
 
   public SaveNoteTask(boolean updateLastModification) {
@@ -50,6 +51,14 @@ public class SaveNoteTask extends AsyncTask<Note, Void, Note> {
     this.updateLastModification = updateLastModification;
   }
 
+  public SaveNoteTask(OnNoteSaved mOnNoteSaved, boolean updateLastModification, boolean shouldSync) {
+    super();
+    this.context = OmniNotes.getAppContext();
+    this.mOnNoteSaved = mOnNoteSaved;
+    this.updateLastModification = updateLastModification;
+    this.shouldSync = shouldSync;
+  }
+
 
   @Override
   protected Note doInBackground(Note... params) {
@@ -59,7 +68,9 @@ public class SaveNoteTask extends AsyncTask<Note, Void, Note> {
     if (reminderMustBeSet) {
       note.setReminderFired(false);
     }
-    note = DbHelper.getInstance().updateNote(note, updateLastModification);
+
+    DbHelper db = DbHelper.getInstance();
+    note = shouldSync ? db.updateNote(note, updateLastModification) : db.updateNoteWithoutSync(note, updateLastModification);
     if (reminderMustBeSet) {
       ReminderHelper.addReminder(context, note);
     }
