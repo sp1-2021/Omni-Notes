@@ -72,6 +72,13 @@ If you need some help on how to use the application you'll find everything you n
 
 Look into the wiki for GIFs-based tutorials: [LINK](https://github.com/federicoiosue/Omni-Notes/wiki)
 
+## Connect Google Identity for sync features
+
+First, find the SHA-1 hash of the signing certificate by running the project gradle "android -> signingReport" script.
+After acquiring it, follow the instructions present in the official [google identity docs](https://developers.google.com/identity/sign-in/android/start-integrating)
+to connect your application with a google cloud project. Finally, as the application uses google drive permission, attach DRIVE_FILE scope to the cloud project.
+While creating the oauth identifier, remember that this branch application package is it.feio.android.omninotes.alpha.
+
 ## Build
 
 Watch the following terminal session recording on how to compile distributable files
