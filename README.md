@@ -4,7 +4,7 @@
 
 Look into the wiki for GIFs-based tutorials: [LINK](https://github.com/federicoiosue/Omni-Notes/wiki)
 
-** This version is extended with the sync feature, beside the official documentation, please read the section below **
+**This version is extended with the sync feature, beside the official documentation, please read the section below**
 
 ## Connect Google Identity for sync features
 
@@ -14,7 +14,7 @@ to connect your application with a google cloud project. Finally, as the applica
 While creating the oauth identifier, remember that this branch application package is it.feio.android.omninotes.alpha.
 
 ## Enabling sync inside application
-Go to **Settings** -> Enable sync and log in through your google account.
+Go to **Settings** -> **Enable sync** and sign in through your google account. Updated will be polled every few seconds.
 
 ## Build
 
