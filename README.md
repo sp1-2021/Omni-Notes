@@ -1,76 +1,10 @@
  ![icon](assets/logo.png)
 
-Omni-Notes
-==========
-
-![License](https://img.shields.io/badge/License-GPLv3-red.svg)
-[![CI workflow](https://github.com/federicoiosue/Omni-Notes/workflows/CI/badge.svg)](https://github.com/federicoiosue/Omni-Notes/actions?query=workflow%3ACI)
-[![CodeQL Workflow](https://github.com/federicoiosue/Omni-Notes/workflows/CodeQL/badge.svg)](https://github.com/federicoiosue/Omni-Notes/actions?query=workflow%3ACodeQL)
-[![Sonarcloud Coverage](https://sonarcloud.io/api/project_badges/measure?project=omni-notes&metric=coverage)](https://sonarcloud.io/dashboard?id=omni-notes)
-[![Sonarcloud Maintainability](https://sonarcloud.io/api/project_badges/measure?project=omni-notes&metric=sqale_rating)](https://sonarcloud.io/dashboard?id=omni-notes)
-[![Crowdin](https://d322cqt584bo4o.cloudfront.net/omni-notes/localized.png)](https://crowdin.com/project/omni-notes)
-[![GitHub release](https://img.shields.io/github/release/federicoiosue/omni-notes.svg)](https://github.com/federicoiosue/Omni-Notes/releases/latest)
-
-Note taking <b>open-source</b> application aimed to have both a <b>simple interface</b> but keeping <b>smart</b> behavior.
-
-The project was inspired by the absence of such applications compatible with old phones and old versions of Android. It aims to provide an attractive look and follow the most recent design guidelines of the Google operating system.
-
-**Follow the developments and post your comments and advice on Facebook Community at https://www.facebook.com/OmniNotes**
-
-Help to keep translations updated is always welcome, if you want give a hand checkout the translation project on *https://translate.omninotes.app.*
-
-<a href="https://f-droid.org/repository/browse/?fdid=it.feio.android.omninotes.foss" target="_blank">
-<img src="https://f-droid.org/badge/get-it-on.png" alt="Get it on F-Droid" height="90"/></a>
-<a href="https://play.google.com/store/apps/details?id=it.feio.android.omninotes" target="_blank">
-<img src="https://play.google.com/intl/en_us/badges/images/generic/en-play-badge.png" alt="Get it on Google Play" height="90"/></a>
-
-If you're willing to help speeding up developments please also opt-in for the Alpha version of the app following continuous delivery principles:
-
-<a href="https://play.google.com/store/apps/details?id=it.feio.android.omninotes.alpha" target="_blank">
-<img src="https://play.google.com/intl/en_us/badges/images/generic/en-play-badge.png" alt="Get it on Google Play" height="90"/></a>
-
-## Features
-
-Currently the following functions are implemented:
-
-* Material Design interface
-  *Basic add, modify, archive, trash and delete notes actions
-* Share, merge and search notes
-* Image, audio and generic file attachments
-* Manage your notes using tags and categories
-* To-do list
-* Sketch-note mode
-* Notes shortcut on home screen
-* Export/import notes to backup
-* Google Now integration: just tell "write a note" followed by the content
-* Multiple widgets, DashClock extension, Android 4.2 lockscreen compatibility
-* Multilanguage: 30+ languages supported: https://crowdin.com/project/omni-notes
-
-
-Further developments will include:
-
-* Notes sychronization
-* Web interface to manage notes ([stub project](https://github.com/federicoiosue/omni-notes-desktop))
-
-You can find a complete changelog inside the application settings menu!
-
-If you need some help on how to use the application you'll find everything you need in the [Help Online](assets/help/help.md) section.
-
-![](https://raw.githubusercontent.com/federicoiosue/Omni-Notes/develop/assets/play_store_pics/02.png)
-![](https://raw.githubusercontent.com/federicoiosue/Omni-Notes/develop/assets/play_store_pics/03.png)
-![](https://raw.githubusercontent.com/federicoiosue/Omni-Notes/develop/assets/play_store_pics/04.png)
-![](https://raw.githubusercontent.com/federicoiosue/Omni-Notes/develop/assets/play_store_pics/05.png)
-![](https://raw.githubusercontent.com/federicoiosue/Omni-Notes/develop/assets/play_store_pics/06.png)
-![](https://raw.githubusercontent.com/federicoiosue/Omni-Notes/develop/assets/play_store_pics/07.png)
-![](https://raw.githubusercontent.com/federicoiosue/Omni-Notes/develop/assets/play_store_pics/08.png)
-![](https://raw.githubusercontent.com/federicoiosue/Omni-Notes/develop/assets/play_store_pics/09.png)
-![](https://raw.githubusercontent.com/federicoiosue/Omni-Notes/develop/assets/play_store_pics/10.png)
-![](https://raw.githubusercontent.com/federicoiosue/Omni-Notes/develop/assets/play_store_pics/11.png)
-![](https://raw.githubusercontent.com/federicoiosue/Omni-Notes/develop/assets/play_store_pics/12.png)
-
 ## User guide
 
 Look into the wiki for GIFs-based tutorials: [LINK](https://github.com/federicoiosue/Omni-Notes/wiki)
+
+** This version is extended with the sync feature, beside the official documentation, please read the section below **
 
 ## Connect Google Identity for sync features
 
@@ -78,6 +12,9 @@ First, find the SHA-1 hash of the signing certificate by running the project gra
 After acquiring it, follow the instructions present in the official [google identity docs](https://developers.google.com/identity/sign-in/android/start-integrating)
 to connect your application with a google cloud project. Finally, as the application uses google drive permission, attach DRIVE_FILE scope to the cloud project.
 While creating the oauth identifier, remember that this branch application package is it.feio.android.omninotes.alpha.
+
+## Enabling sync inside application
+Go to **Settings** -> Enable sync and log in through your google account.
 
 ## Build
 
