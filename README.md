@@ -1,5 +1,20 @@
 # Omni-Notes
 
+## Zrealizowane funkcjonalności aplikacji mobilnej
+
+### Uwierzytelnianie poprzez konto Google
+
+Użytkownik w trakcie użytkowania aplikacji może włączyć możliwość synchronizacji wybranych notatek z chmurą. Wymaga to
+zalogowania się do konta google.
+
+
+### Synchronizacja notatek z chmurą
+
+Notatki synchronizowane w trakcie odczytu ich treści są pobierane z chmury, wraz z zawartością notatki pobierane są
+również załączniki. Podczas zapisu notatki, jej treść jest zapisywana na dysku w chmurze, wszystkie nowe oraz zmienione
+załączniki są ponownie przekazywane do chmury. Zmiana załącznika wykrywana jest poprzez sprawdzenie sygnatury pliku
+
+
 ## Użytkowanie bazowej wersji projektu.
 
 Podstawowe informacje bazowej wersji aplikacji dostępne są w oficjalnej dokumentacji OmniNotes [LINK](https://github.com/federicoiosue/Omni-Notes/wiki). Nasz projekt został rozszerzony o funkcjonalność synchronizacji, i instrukcja jej użytkowania przedstawiona jest w poniższej dokumentacji.
