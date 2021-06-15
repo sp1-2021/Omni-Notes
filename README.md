@@ -13,6 +13,7 @@ Otwierając menu boczne w aplikacji, przechodzimy do zakładki **Settings** a na
 
 ## Kompilacja projektu
 
-Kompilacja finalnego pliku .apk zaprezentowana jest w oficjalnej dokumentacji poniżej:
+Kompilacja finalnego pliku .apk zaprezentowana jest w oficjalnej dokumentacji:
+[https://github.com/federicoiosue/Omni-Notes#build]
 [![asciicast](https://asciinema.org/a/102898.png)](https://asciinema.org/a/102898)
 
