@@ -11,6 +11,8 @@ Aby funkcjonalność synchronizacji była dostępna, aplikacja musi być zarejes
 ## Użytkowanie funkcjonalności synchronizacji
 Otwierając menu boczne w aplikacji, przechodzimy do zakładki **Settings** a następnie **Enable Sync**. Po włączeniu dostępnej opcji synchronizacji, zostaniemy poproszeni o zalogowanie się przez konto Google, oraz o przyznanie uprawnień aplikacji do dysku google. Od teraz notatki będą automatycznie synchronizowane z dyskiem Google.
 
+![usage](https://i.imgur.com/HBwOe9M.png)
+
 ## Kompilacja projektu
 
 Kompilacja finalnego pliku .apk zaprezentowana jest w [oficjalnej dokumentacji](https://github.com/federicoiosue/Omni-Notes#build):
